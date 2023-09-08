@@ -3,20 +3,19 @@ const app = express();
 const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy; 
+const LocalStrategy = require('passport-local').Strategy;
 const path = require('path');
 
-const User = require('./models/UserModel'); 
+const User = require('./models/UserModel');
+const Poll = require('./models/PollModel');
 
-mongoose.connect('mongodb://localhost:27017/your-database-name', { 
+mongoose.connect('mongodb://127.0.0.1:27017/Pollify', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
 
-app.set('view engine', 'ejs'); 
+app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
-
-
 
 //-----------------------------------user-routes---------------------------------------------------
 
@@ -75,39 +74,71 @@ app.post(
   })
 );
 
+//------------------------poll routes ---------------------------------------------
+
+// Route to render the home page
+app.get('/', async (req, res, next) => {
+  try {
+    const polls = await Poll.find(); // Fetch polls from your database or wherever you store them
+    res.render('home', { polls });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// Route to handle the poll creation form submission
+app.post('/create-poll', async (req, res, next) => {
+  try {
+    const { question, options } = req.body;
+    const initialVotes = Array(options.split(',').length).fill(0); // Initialize votes with zeros
+    const newPoll = new Poll({
+      question,
+      options: options.split(',').map(option => option.trim()),
+      votes: initialVotes, // Set the initial votes
+    });
+    const result = await newPoll.save();
+    res.redirect('/');
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/vote/:pollId', async (req, res, next) => {
+  try {
+    const pollId = req.params.pollId;
+    const selectedOption = req.body.selectedOption;
+    
+    // Find the poll by ID
+    const poll = await Poll.findById(pollId);
+
+    if (!poll) {
+      return res.status(404).send('Poll not found');
+    }
+
+    // Find the index of the selected option and increment its vote count
+    const optionIndex = poll.options.indexOf(selectedOption);
+    if (optionIndex !== -1) {
+      // Increment the vote count for the selected option
+      poll.votes[optionIndex]++;
+      await poll.save();
+    }
+
+    res.redirect('/');
+  } catch (error) {
+    return next(error);
+  }
+});
 
 
 
-//poll routes 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-app.listen(3000, (err) => {
+app.listen(4000, (err) => {
   if (err) {
     console.error('Failed to connect to the server:', err);
   } else {
-    console.log('Server is listening on port 3000');
+    console.log('Server is listening on port 4000');
   }
 });

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pollify</title>
+  t
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha1/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h1>Welcome to Pollify!</h1>
+
+        <button id="create-poll-button" class="btn btn-primary">Create Poll</button>
+
+        <div id="poll-form" style="display: none;">
+            <h2>Create a New Poll</h2>
+            <form action="/create-poll" method="POST">
+                <div class="mb-3">
+                    <label for="question" class="form-label">Question:</label>
+                    <input type="text" class="form-control" id="question" name="question" required>
+                </div>
+                <div class="mb-3">
+                    <label for="options" class="form-label">Options (comma-separated):</label>
+                    <input type="text" class="form-control" id="options" name="options" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Poll</button>
+            </form>
+        </div>
+
+        <div id="poll-list">
+            <% polls.forEach(function(poll) { %>
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h3 class="card-title"><%= poll.question %></h3>
+                    <form action="/vote/<%= poll._id %>" method="POST">
+                        <% for (let i = 0; i < poll.options.length; i++) { %>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="selectedOption" id="option<%= i %>"
+                                value="<%= poll.options[i] %>">
+                            <label class="form-check-label" for="option<%= i %>"><%= poll.options[i] %></label>
+                        </div>
+                        <% } %>
+                        <button type="submit" class="btn btn-primary">Vote</button>
+                    </form>
+                    >
+                    <h4>Results:</h4>
+                    <% function calculatePercentage(votes, totalVotes) { %>
+                    <% let percentage = ((votes / totalVotes) * 100).toFixed(2); %>
+                    <% return percentage + '%' %>
+                    <% } %>
+                    <% for (let i = 0; i < poll.options.length; i++) { %>
+                    <p><%= poll.options[i] %>: <%= calculatePercentage(poll.votes[i], poll.votes.reduce((acc, cur) => acc + cur, 0)) %></p>
+                    <% } %>
+                </div>
+            </div>
+            <% }); %>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha1/dist/js/bootstrap.min.js"></script>
+</body>
+</html>
